@@ -1,0 +1,1263 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Day 17 · Hypothesis Testing cho Bất động sản</title>
+  <style>
+    :root {
+      --ink: #17211c;
+      --muted: #68716c;
+      --paper: #f5f2e9;
+      --card: rgba(255, 255, 255, 0.86);
+      --green: #215c45;
+      --green-2: #377b5f;
+      --lime: #d9ecb8;
+      --orange: #e9783f;
+      --line: rgba(23, 33, 28, 0.13);
+      --shadow: 0 22px 60px rgba(27, 50, 39, 0.12);
+    }
+
+    * { box-sizing: border-box; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      margin: 0;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 0 0, rgba(217, 236, 184, 0.8), transparent 28rem),
+        radial-gradient(circle at 100% 12%, rgba(233, 120, 63, 0.14), transparent 24rem),
+        var(--paper);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.55;
+    }
+
+    button, input, select { font: inherit; }
+
+    button { cursor: pointer; }
+
+    .shell {
+      width: min(1180px, calc(100% - 32px));
+      margin: 0 auto;
+    }
+
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      border-bottom: 1px solid var(--line);
+      background: rgba(245, 242, 233, 0.88);
+      backdrop-filter: blur(18px);
+    }
+
+    .topbar-inner {
+      min-height: 68px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 11px;
+      color: var(--ink);
+      font-weight: 850;
+      letter-spacing: -0.02em;
+      text-decoration: none;
+    }
+
+    .brand-mark {
+      width: 34px;
+      height: 34px;
+      display: grid;
+      place-items: center;
+      border-radius: 11px;
+      color: white;
+      background: var(--green);
+      box-shadow: 0 8px 20px rgba(33, 92, 69, 0.22);
+    }
+
+    nav {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    nav a {
+      padding: 8px 11px;
+      border-radius: 10px;
+      color: var(--muted);
+      font-size: 14px;
+      font-weight: 700;
+      text-decoration: none;
+    }
+
+    nav a:hover {
+      color: var(--green);
+      background: rgba(33, 92, 69, 0.08);
+    }
+
+    .hero {
+      min-height: 650px;
+      padding: 86px 0 70px;
+      display: grid;
+      grid-template-columns: 1.12fr 0.88fr;
+      align-items: center;
+      gap: 62px;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 11px;
+      border: 1px solid rgba(33, 92, 69, 0.18);
+      border-radius: 999px;
+      color: var(--green);
+      background: rgba(255, 255, 255, 0.58);
+      font-size: 13px;
+      font-weight: 850;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    h1, h2, h3, p { margin-top: 0; }
+
+    h1 {
+      max-width: 780px;
+      margin: 20px 0 20px;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: clamp(48px, 7vw, 86px);
+      line-height: 0.98;
+      letter-spacing: -0.055em;
+    }
+
+    h1 span { color: var(--green); }
+
+    .hero-copy > p {
+      max-width: 660px;
+      color: var(--muted);
+      font-size: clamp(18px, 2vw, 22px);
+    }
+
+    .student-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px 18px;
+      margin: 22px 0 0;
+      color: var(--ink) !important;
+      font-size: 15px !important;
+      font-weight: 750;
+    }
+
+    .student-meta span {
+      padding: 7px 11px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.6);
+    }
+
+    .hero-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 30px;
+    }
+
+    .btn {
+      min-height: 48px;
+      padding: 0 18px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 9px;
+      border: 0;
+      border-radius: 14px;
+      font-weight: 850;
+      text-decoration: none;
+      transition: transform 160ms ease, box-shadow 160ms ease;
+    }
+
+    .btn:hover { transform: translateY(-2px); }
+
+    .btn-primary {
+      color: white;
+      background: var(--green);
+      box-shadow: 0 12px 24px rgba(33, 92, 69, 0.24);
+    }
+
+    .btn-secondary {
+      border: 1px solid var(--line);
+      color: var(--ink);
+      background: rgba(255, 255, 255, 0.68);
+    }
+
+    .hero-visual {
+      position: relative;
+      min-height: 470px;
+    }
+
+    .building {
+      position: absolute;
+      inset: 28px 20px 0 40px;
+      overflow: hidden;
+      border: 10px solid rgba(255, 255, 255, 0.65);
+      border-radius: 46% 46% 22px 22px;
+      background:
+        linear-gradient(120deg, rgba(255,255,255,.1), rgba(255,255,255,.45)),
+        repeating-linear-gradient(90deg, transparent 0 48px, rgba(255,255,255,.2) 48px 53px),
+        repeating-linear-gradient(0deg, transparent 0 55px, rgba(255,255,255,.18) 55px 60px),
+        linear-gradient(145deg, #8db6a2, #245d48);
+      box-shadow: var(--shadow);
+      transform: rotate(2deg);
+    }
+
+    .building::after {
+      content: "";
+      position: absolute;
+      left: 50%;
+      bottom: 0;
+      width: 76px;
+      height: 116px;
+      border-radius: 36px 36px 0 0;
+      background: rgba(19, 49, 37, 0.7);
+      transform: translateX(-50%);
+    }
+
+    .floating-card {
+      position: absolute;
+      z-index: 2;
+      max-width: 245px;
+      padding: 17px;
+      border: 1px solid rgba(255, 255, 255, 0.7);
+      border-radius: 20px;
+      background: rgba(255, 255, 255, 0.9);
+      box-shadow: 0 16px 40px rgba(23, 33, 28, 0.16);
+      backdrop-filter: blur(12px);
+    }
+
+    .floating-card strong {
+      display: block;
+      margin-bottom: 4px;
+      color: var(--green);
+      font-size: 27px;
+      letter-spacing: -0.04em;
+    }
+
+    .floating-card small { color: var(--muted); }
+    .float-a { top: 2px; right: 0; }
+    .float-b { left: 0; bottom: 26px; }
+
+    .section { padding: 92px 0; }
+
+    .section-kicker {
+      margin-bottom: 10px;
+      color: var(--orange);
+      font-size: 13px;
+      font-weight: 900;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    h2 {
+      max-width: 840px;
+      margin-bottom: 18px;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: clamp(34px, 5vw, 56px);
+      line-height: 1.08;
+      letter-spacing: -0.045em;
+    }
+
+    .lead {
+      max-width: 790px;
+      margin-bottom: 38px;
+      color: var(--muted);
+      font-size: 18px;
+    }
+
+    .hypothesis-card {
+      position: relative;
+      padding: clamp(28px, 5vw, 58px);
+      overflow: hidden;
+      border-radius: 30px;
+      color: white;
+      background: var(--green);
+      box-shadow: var(--shadow);
+    }
+
+    .hypothesis-card::after {
+      content: "H₁";
+      position: absolute;
+      right: 28px;
+      bottom: -50px;
+      color: rgba(255, 255, 255, 0.08);
+      font-family: Georgia, serif;
+      font-size: 230px;
+      line-height: 1;
+    }
+
+    .hypothesis-card blockquote {
+      position: relative;
+      z-index: 1;
+      max-width: 980px;
+      margin: 0;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: clamp(25px, 4vw, 42px);
+      line-height: 1.28;
+      letter-spacing: -0.025em;
+    }
+
+    .success-grid, .test-grid, .metric-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 18px;
+      margin-top: 22px;
+    }
+
+    .mini-card, .test-card, .metric {
+      padding: 22px;
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      background: var(--card);
+      box-shadow: 0 10px 28px rgba(23, 33, 28, 0.06);
+    }
+
+    .number {
+      width: 36px;
+      height: 36px;
+      margin-bottom: 18px;
+      display: grid;
+      place-items: center;
+      border-radius: 11px;
+      color: var(--green);
+      background: var(--lime);
+      font-weight: 950;
+    }
+
+    .mini-card h3, .test-card h3 { margin-bottom: 8px; }
+    .mini-card p, .test-card p { margin-bottom: 0; color: var(--muted); }
+
+    .old-way {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px;
+    }
+
+    .old-panel {
+      padding: 30px;
+      border-radius: 24px;
+    }
+
+    .old-panel.before {
+      border: 1px solid rgba(233, 120, 63, 0.25);
+      background: rgba(233, 120, 63, 0.08);
+    }
+
+    .old-panel.after {
+      border: 1px solid rgba(33, 92, 69, 0.2);
+      background: rgba(217, 236, 184, 0.35);
+    }
+
+    .old-panel ul { padding-left: 20px; margin-bottom: 0; }
+    .old-panel li + li { margin-top: 8px; }
+
+    .tag {
+      display: inline-flex;
+      padding: 5px 9px;
+      border-radius: 999px;
+      color: var(--green);
+      background: var(--lime);
+      font-size: 12px;
+      font-weight: 900;
+      text-transform: uppercase;
+    }
+
+    .test-card {
+      position: relative;
+      padding-top: 30px;
+      overflow: hidden;
+    }
+
+    .test-card::before {
+      content: "";
+      position: absolute;
+      inset: 0 0 auto;
+      height: 7px;
+      background: var(--green);
+    }
+
+    .test-card:nth-child(2)::before { background: var(--orange); }
+    .test-card:nth-child(3)::before { background: #5f6cb2; }
+
+    .test-meta {
+      margin-top: 18px;
+      display: grid;
+      gap: 8px;
+    }
+
+    .test-meta div {
+      padding-top: 8px;
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      border-top: 1px solid var(--line);
+      font-size: 14px;
+    }
+
+    .test-meta span { color: var(--muted); }
+
+    .prototype-wrap {
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: 28px;
+      background: rgba(255, 255, 255, 0.55);
+      box-shadow: var(--shadow);
+    }
+
+    .tabs {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      padding: 4px;
+    }
+
+    .tab {
+      padding: 13px 10px;
+      border: 0;
+      border-radius: 14px;
+      color: var(--muted);
+      background: transparent;
+      font-weight: 850;
+    }
+
+    .tab.active {
+      color: white;
+      background: var(--green);
+      box-shadow: 0 8px 18px rgba(33, 92, 69, 0.2);
+    }
+
+    .prototype {
+      display: none;
+      min-height: 560px;
+      padding: 22px;
+      border-radius: 20px;
+      background: #fff;
+    }
+
+    .prototype.active { display: block; }
+
+    .browser {
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: #fbfbf8;
+    }
+
+    .browser-bar {
+      height: 43px;
+      padding: 0 14px;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      border-bottom: 1px solid var(--line);
+      background: #eeeae0;
+    }
+
+    .dot { width: 10px; height: 10px; border-radius: 50%; background: #d2cabe; }
+    .dot:first-child { background: #e9783f; }
+
+    .landing {
+      min-height: 510px;
+      padding: 44px;
+      display: grid;
+      grid-template-columns: 1.1fr .9fr;
+      align-items: center;
+      gap: 34px;
+      background:
+        radial-gradient(circle at 0 100%, rgba(217,236,184,.9), transparent 34rem),
+        #faf9f4;
+    }
+
+    .landing h3 {
+      margin-bottom: 14px;
+      font-family: Georgia, serif;
+      font-size: clamp(34px, 5vw, 58px);
+      line-height: 1.02;
+      letter-spacing: -0.04em;
+    }
+
+    .landing p { color: var(--muted); font-size: 17px; }
+
+    .form-card {
+      padding: 24px;
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      background: white;
+      box-shadow: 0 14px 34px rgba(23, 33, 28, 0.1);
+    }
+
+    .form-card h4 { margin: 0 0 16px; font-size: 19px; }
+
+    .field { margin-bottom: 13px; }
+
+    label {
+      display: block;
+      margin-bottom: 6px;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 750;
+    }
+
+    input, select {
+      width: 100%;
+      min-height: 44px;
+      padding: 0 12px;
+      border: 1px solid var(--line);
+      border-radius: 11px;
+      color: var(--ink);
+      background: white;
+      outline: none;
+    }
+
+    input:focus, select:focus {
+      border-color: var(--green-2);
+      box-shadow: 0 0 0 3px rgba(55, 123, 95, 0.11);
+    }
+
+    .full { width: 100%; }
+
+    .result {
+      display: none;
+      padding: 18px;
+      border: 1px solid rgba(33, 92, 69, 0.18);
+      border-radius: 14px;
+      color: var(--green);
+      background: rgba(217, 236, 184, 0.38);
+      font-weight: 750;
+    }
+
+    .result.show { display: block; }
+
+    .concierge {
+      display: grid;
+      grid-template-columns: .78fr 1.22fr;
+      gap: 20px;
+    }
+
+    .phone {
+      max-width: 360px;
+      min-height: 530px;
+      padding: 14px;
+      border: 8px solid #17211c;
+      border-radius: 35px;
+      background: #eef5f1;
+      box-shadow: 0 18px 40px rgba(23, 33, 28, 0.18);
+    }
+
+    .phone-head {
+      padding: 10px 8px 17px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .avatar {
+      width: 38px;
+      height: 38px;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      color: white;
+      background: var(--green);
+      font-weight: 900;
+    }
+
+    .messages {
+      height: 405px;
+      padding: 16px 4px;
+      overflow-y: auto;
+    }
+
+    .bubble {
+      width: fit-content;
+      max-width: 86%;
+      margin-bottom: 10px;
+      padding: 10px 12px;
+      border-radius: 14px 14px 14px 4px;
+      background: white;
+      box-shadow: 0 4px 10px rgba(23, 33, 28, 0.06);
+      font-size: 14px;
+    }
+
+    .bubble.user {
+      margin-left: auto;
+      border-radius: 14px 14px 4px 14px;
+      color: white;
+      background: var(--green);
+    }
+
+    .operator-panel {
+      padding: 28px;
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      background: #faf9f4;
+    }
+
+    .operator-panel h3 { font-size: 28px; }
+
+    .checklist {
+      margin: 24px 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .checklist li {
+      margin-bottom: 10px;
+      padding: 12px 14px 12px 43px;
+      position: relative;
+      border-radius: 12px;
+      background: white;
+    }
+
+    .checklist li::before {
+      content: "✓";
+      position: absolute;
+      left: 14px;
+      color: var(--green);
+      font-weight: 950;
+    }
+
+    .property-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+    }
+
+    .property {
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: white;
+    }
+
+    .property-art {
+      height: 120px;
+      position: relative;
+      background:
+        linear-gradient(145deg, transparent 48%, rgba(255,255,255,.25) 49%),
+        repeating-linear-gradient(90deg, transparent 0 24px, rgba(255,255,255,.18) 24px 28px),
+        linear-gradient(150deg, #9dc6b2, #2c6b51);
+    }
+
+    .property-art::after {
+      content: "";
+      position: absolute;
+      right: 18px;
+      bottom: 0;
+      width: 62px;
+      height: 86px;
+      border-radius: 8px 8px 0 0;
+      background:
+        repeating-linear-gradient(0deg, transparent 0 16px, rgba(255,255,255,.2) 16px 19px),
+        #245d48;
+    }
+
+    .property-body { padding: 14px; }
+    .property-body h4 { margin: 0 0 4px; }
+    .property-body p { margin-bottom: 11px; color: var(--muted); font-size: 13px; }
+    .property .btn { min-height: 38px; padding: 0 11px; font-size: 13px; }
+
+    .woz-layout {
+      display: grid;
+      grid-template-columns: 1.05fr .95fr;
+      gap: 20px;
+    }
+
+    .analysis-card {
+      padding: 26px;
+      border-radius: 20px;
+      color: white;
+      background: #202b25;
+    }
+
+    .analysis-card h3 { font-size: 30px; }
+
+    .score-ring {
+      width: 122px;
+      height: 122px;
+      margin: 24px auto;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      background: conic-gradient(var(--lime) 0 84%, rgba(255,255,255,.13) 84% 100%);
+    }
+
+    .score-inner {
+      width: 93px;
+      height: 93px;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      background: #202b25;
+      font-size: 27px;
+      font-weight: 950;
+    }
+
+    .reason {
+      padding: 12px 0;
+      display: flex;
+      justify-content: space-between;
+      gap: 14px;
+      border-top: 1px solid rgba(255,255,255,.12);
+    }
+
+    .reason span { color: rgba(255,255,255,.66); }
+
+    .fake-ai {
+      padding: 26px;
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      background: #faf9f4;
+    }
+
+    .quick-prompts {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin: 18px 0;
+    }
+
+    .chip {
+      padding: 8px 10px;
+      border: 1px solid rgba(33, 92, 69, .18);
+      border-radius: 999px;
+      color: var(--green);
+      background: rgba(217,236,184,.25);
+      font-size: 13px;
+      font-weight: 750;
+    }
+
+    .ai-output {
+      min-height: 122px;
+      padding: 16px;
+      border-radius: 14px;
+      background: white;
+      color: var(--muted);
+    }
+
+    .rating {
+      display: flex;
+      gap: 8px;
+      margin-top: 16px;
+    }
+
+    .rating button {
+      flex: 1;
+      min-height: 42px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: white;
+    }
+
+    .rating button.selected {
+      border-color: var(--green);
+      color: var(--green);
+      background: var(--lime);
+      font-weight: 900;
+    }
+
+    .metric {
+      text-align: center;
+    }
+
+    .metric strong {
+      display: block;
+      color: var(--green);
+      font-size: 34px;
+      letter-spacing: -0.04em;
+    }
+
+    .metric span { color: var(--muted); font-size: 14px; }
+
+    .decision {
+      padding: 34px;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      align-items: center;
+      gap: 24px;
+      border-radius: 26px;
+      background: var(--lime);
+    }
+
+    .decision h3 {
+      margin-bottom: 7px;
+      font-family: Georgia, serif;
+      font-size: 30px;
+    }
+
+    .decision p { margin: 0; color: #415247; }
+
+    footer {
+      padding: 46px 0 60px;
+      color: var(--muted);
+      text-align: center;
+      font-size: 14px;
+    }
+
+    .toast {
+      position: fixed;
+      right: 22px;
+      bottom: 22px;
+      z-index: 100;
+      max-width: 340px;
+      padding: 14px 17px;
+      border-radius: 13px;
+      color: white;
+      background: var(--green);
+      box-shadow: var(--shadow);
+      opacity: 0;
+      transform: translateY(20px);
+      pointer-events: none;
+      transition: 200ms ease;
+    }
+
+    .toast.show { opacity: 1; transform: translateY(0); }
+
+    @media (max-width: 900px) {
+      nav { display: none; }
+      .hero, .landing, .old-way, .concierge, .woz-layout { grid-template-columns: 1fr; }
+      .hero { padding-top: 60px; }
+      .hero-visual { min-height: 390px; }
+      .success-grid, .test-grid, .property-grid, .metric-grid { grid-template-columns: 1fr; }
+      .phone { margin: 0 auto; }
+      .decision { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 600px) {
+      .shell { width: min(100% - 20px, 1180px); }
+      .section { padding: 66px 0; }
+      .hero { min-height: auto; }
+      .hero-visual { min-height: 330px; }
+      .floating-card { max-width: 190px; }
+      .landing, .prototype { padding: 15px; }
+      .tabs { grid-template-columns: 1fr; }
+      .prototype-wrap { padding: 7px; }
+      .property-grid { grid-template-columns: 1fr; }
+    }
+
+    @media print {
+      .topbar, .hero-actions, .tabs, .toast { display: none !important; }
+      body { background: white; }
+      .section { padding: 38px 0; break-inside: avoid; }
+      .prototype { display: block !important; min-height: auto; margin-bottom: 24px; }
+      .prototype-wrap { box-shadow: none; }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="shell topbar-inner">
+      <a class="brand" href="#top">
+        <span class="brand-mark">⌂</span>
+        PropMatch · Day 17
+      </a>
+      <nav aria-label="Điều hướng">
+        <a href="#hypothesis">Hypothesis</a>
+        <a href="#old-way">Cách cũ</a>
+        <a href="#tests">3 cách test</a>
+        <a href="#prototype">Prototype</a>
+        <a href="#metrics">Kết luận</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="top">
+    <section class="shell hero">
+      <div class="hero-copy">
+        <span class="eyebrow">Lab Assignment · Day 17</span>
+        <h1>Test nhu cầu trước khi xây <span>“AI bất động sản”</span></h1>
+        <p>Một hypothesis quan trọng, ba thí nghiệm chi phí thấp, và ba prototype đủ thật để học từ khách hàng ngay trong 7 ngày.</p>
+        <p class="student-meta">
+          <span>Học viên: Đặng Trần Đạt</span>
+          <span>Mã học viên: 2A202600662</span>
+        </p>
+        <div class="hero-actions">
+          <a class="btn btn-primary" href="#prototype">Chạy thử prototype →</a>
+          <a class="btn btn-secondary" href="#hypothesis">Xem logic bài làm</a>
+        </div>
+      </div>
+      <div class="hero-visual" aria-label="Minh họa tòa nhà">
+        <div class="building"></div>
+        <div class="floating-card float-a">
+          <strong>3× rẻ hơn</strong>
+          <small>so với xây sản phẩm hoàn chỉnh trước khi kiểm chứng nhu cầu</small>
+        </div>
+        <div class="floating-card float-b">
+          <strong>7 ngày</strong>
+          <small>để có tín hiệu định lượng và phản hồi định tính đầu tiên</small>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="hypothesis">
+      <div class="shell">
+        <p class="section-kicker">01 · Hypothesis quan trọng</p>
+        <h2>Khách hàng có muốn một shortlist được “may đo” cho mình?</h2>
+        <p class="lead">Đối tượng ban đầu được thu hẹp để dễ kiểm chứng: người mua căn hộ lần đầu tại TP.HCM, ngân sách 2–5 tỷ đồng.</p>
+
+        <div class="hypothesis-card">
+          <blockquote>
+            “Người mua căn hộ lần đầu sẽ sẵn sàng để lại thông tin liên hệ và tiêu chí tìm nhà nếu họ được hứa nhận một shortlist 5 căn phù hợp, có giải thích rõ lý do, trong vòng 30 phút.”
+          </blockquote>
+        </div>
+
+        <div class="success-grid">
+          <article class="mini-card">
+            <div class="number">A</div>
+            <h3>Nhu cầu</h3>
+            <p>Ít nhất <strong>20%</strong> khách truy cập landing page hoàn tất form nhận shortlist.</p>
+          </article>
+          <article class="mini-card">
+            <div class="number">B</div>
+            <h3>Giá trị</h3>
+            <p>Ít nhất <strong>60%</strong> người nhận shortlist đánh giá kết quả từ 4/5 điểm.</p>
+          </article>
+          <article class="mini-card">
+            <div class="number">C</div>
+            <h3>Ý định thật</h3>
+            <p>Ít nhất <strong>30%</strong> lead yêu cầu tư vấn thêm hoặc đặt lịch xem một căn.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="old-way">
+      <div class="shell">
+        <p class="section-kicker">02 · Cách team dự định làm</p>
+        <h2>Phương án ban đầu quá lớn cho một điều chưa chắc đúng</h2>
+        <p class="lead">Giả định kế hoạch ban đầu của team là xây một nền tảng hoàn chỉnh rồi mới đưa ra thị trường.</p>
+
+        <div class="old-way">
+          <article class="old-panel before">
+            <span class="tag">Cách dự kiến ban đầu</span>
+            <h3>Xây full website/app</h3>
+            <ul>
+              <li>Thu thập và chuẩn hóa hàng nghìn tin đăng.</li>
+              <li>Xây bộ lọc, tài khoản người dùng và hệ thống gợi ý AI.</li>
+              <li>Tích hợp bản đồ, CRM, chatbot và lịch xem nhà.</li>
+              <li>Chạy quảng cáo sau khi sản phẩm đã tương đối hoàn chỉnh.</li>
+            </ul>
+          </article>
+          <article class="old-panel after">
+            <span class="tag">Rủi ro cần tránh</span>
+            <h3>Tối ưu giải pháp trước khi biết nhu cầu</h3>
+            <ul>
+              <li>Chi phí phát triển và dữ liệu cao.</li>
+              <li>Mất nhiều tuần mới có phản hồi thật.</li>
+              <li>Không biết khách cần “AI”, hay chỉ cần kết quả nhanh và đáng tin.</li>
+              <li>Nếu hypothesis sai, phần lớn công sức xây dựng bị lãng phí.</li>
+            </ul>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="tests">
+      <div class="shell">
+        <p class="section-kicker">03 · Ba cách rẻ hơn</p>
+        <h2>Ba lớp bằng chứng, từ “tò mò” đến hành động thật</h2>
+        <p class="lead">Mỗi thí nghiệm trả lời một phần khác nhau của cùng hypothesis, và đều có thể chạy mà chưa cần xây hệ thống AI thật.</p>
+
+        <div class="test-grid">
+          <article class="test-card">
+            <span class="tag">Test 1 · Smoke test</span>
+            <h3>Landing page + quảng cáo nhỏ</h3>
+            <p>Đưa ra lời hứa giá trị và đo xem người dùng có chịu để lại nhu cầu cùng số điện thoại hay không.</p>
+            <div class="test-meta">
+              <div><span>Đo</span><strong>Conversion form</strong></div>
+              <div><span>Thời gian</span><strong>1–2 ngày</strong></div>
+              <div><span>Ngân sách gợi ý</span><strong>500k–1 triệu</strong></div>
+            </div>
+          </article>
+
+          <article class="test-card">
+            <span class="tag">Test 2 · Concierge MVP</span>
+            <h3>Chuyên viên làm thủ công</h3>
+            <p>Nhận tiêu chí qua form/Zalo, tự tìm 5 căn từ nguồn sẵn có rồi gửi shortlist có giải thích trong 30 phút.</p>
+            <div class="test-meta">
+              <div><span>Đo</span><strong>Điểm hài lòng</strong></div>
+              <div><span>Thời gian</span><strong>3–5 ngày</strong></div>
+              <div><span>Chi phí chính</span><strong>Thời gian team</strong></div>
+            </div>
+          </article>
+
+          <article class="test-card">
+            <span class="tag">Test 3 · Wizard-of-Oz</span>
+            <h3>Giao diện AI, xử lý phía sau thủ công</h3>
+            <p>Cho khách trải nghiệm tính năng “AI phân tích độ phù hợp”, nhưng team chuẩn bị câu trả lời phía sau.</p>
+            <div class="test-meta">
+              <div><span>Đo</span><strong>Trust + xem nhà</strong></div>
+              <div><span>Thời gian</span><strong>1–2 ngày</strong></div>
+              <div><span>Công cụ</span><strong>HTML/no-code</strong></div>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="prototype">
+      <div class="shell">
+        <p class="section-kicker">04 · Prototype nhanh</p>
+        <h2>Bấm thử cả ba thí nghiệm</h2>
+        <p class="lead">Các tương tác bên dưới mô phỏng đúng trải nghiệm khách hàng. Dữ liệu chỉ tồn tại trong trình duyệt và dùng cho demo.</p>
+
+        <div class="prototype-wrap">
+          <div class="tabs" role="tablist">
+            <button class="tab active" data-tab="landing-proto">1. Landing page</button>
+            <button class="tab" data-tab="concierge-proto">2. Concierge MVP</button>
+            <button class="tab" data-tab="woz-proto">3. Wizard-of-Oz</button>
+          </div>
+
+          <div class="prototype active" id="landing-proto">
+            <div class="browser">
+              <div class="browser-bar"><i class="dot"></i><i class="dot"></i><i class="dot"></i></div>
+              <div class="landing">
+                <div>
+                  <span class="eyebrow">PropMatch · Miễn phí</span>
+                  <h3>5 căn hộ hợp với bạn trong 30 phút.</h3>
+                  <p>Không cần lướt hàng trăm tin. Chúng tôi lọc theo ngân sách, khu vực và nhu cầu sống của riêng bạn.</p>
+                  <p>✓ Có lý do phù hợp &nbsp; ✓ Không tin trùng &nbsp; ✓ Không cam kết mua</p>
+                </div>
+                <form class="form-card" id="lead-form">
+                  <h4>Nhận shortlist miễn phí</h4>
+                  <div id="lead-fields">
+                    <div class="field">
+                      <label for="budget">Ngân sách</label>
+                      <select id="budget" required>
+                        <option value="">Chọn ngân sách</option>
+                        <option>2–3 tỷ</option>
+                        <option>3–4 tỷ</option>
+                        <option>4–5 tỷ</option>
+                      </select>
+                    </div>
+                    <div class="field">
+                      <label for="area">Khu vực ưu tiên</label>
+                      <select id="area" required>
+                        <option value="">Chọn khu vực</option>
+                        <option>TP. Thủ Đức</option>
+                        <option>Quận 7</option>
+                        <option>Bình Thạnh</option>
+                        <option>Không giới hạn</option>
+                      </select>
+                    </div>
+                    <div class="field">
+                      <label for="phone">Số điện thoại</label>
+                      <input id="phone" type="tel" placeholder="09xx xxx xxx" required>
+                    </div>
+                    <button class="btn btn-primary full" type="submit">Gửi tiêu chí của tôi →</button>
+                  </div>
+                  <div class="result" id="lead-result">
+                    ✓ Đã ghi nhận nhu cầu! Đây chính là conversion mà smoke test cần đo.
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+
+          <div class="prototype" id="concierge-proto">
+            <div class="concierge">
+              <div class="phone">
+                <div class="phone-head">
+                  <div class="avatar">P</div>
+                  <div><strong>PropMatch Concierge</strong><br><small>Thường phản hồi trong 5 phút</small></div>
+                </div>
+                <div class="messages" id="messages">
+                  <div class="bubble">Chào bạn 👋 Mình sẽ tìm 5 căn phù hợp. Bạn ưu tiên điều gì nhất?</div>
+                  <div class="bubble user">Gần chỗ làm và có 2 phòng ngủ.</div>
+                  <div class="bubble">Ngân sách tối đa của bạn là bao nhiêu?</div>
+                  <div class="bubble user">Khoảng 3,5 tỷ.</div>
+                  <div class="bubble">Đã rõ. Chuyên viên đang lọc dữ liệu thật và sẽ gửi shortlist trong 30 phút.</div>
+                </div>
+              </div>
+
+              <div class="operator-panel">
+                <span class="tag">Phía sau hậu trường</span>
+                <h3>Chưa cần AI — team đóng vai “engine”</h3>
+                <ul class="checklist">
+                  <li>Nhận tiêu chí từ form hoặc Zalo.</li>
+                  <li>Tìm thủ công trên nguồn tin hiện có.</li>
+                  <li>Chọn 5 căn và viết lý do phù hợp.</li>
+                  <li>Gửi khách, hỏi điểm hài lòng và ý định xem nhà.</li>
+                </ul>
+                <button class="btn btn-primary" id="send-shortlist">Mô phỏng gửi shortlist</button>
+                <div class="result" id="concierge-result" style="margin-top:14px">
+                  ✓ Shortlist đã gửi. Bây giờ đo: khách mở tin nào, chấm mấy điểm và có muốn xem nhà không.
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="prototype" id="woz-proto">
+            <div class="property-grid" style="margin-bottom:18px">
+              <article class="property">
+                <div class="property-art"></div>
+                <div class="property-body">
+                  <h4>Lumière Riverside</h4>
+                  <p>2PN · 68m² · 3,45 tỷ · TP. Thủ Đức</p>
+                  <button class="btn btn-secondary analyze-btn" data-name="Lumière Riverside">AI phân tích</button>
+                </div>
+              </article>
+              <article class="property">
+                <div class="property-art" style="filter:hue-rotate(28deg)"></div>
+                <div class="property-body">
+                  <h4>Sunrise City View</h4>
+                  <p>2PN · 70m² · 3,2 tỷ · Quận 7</p>
+                  <button class="btn btn-secondary analyze-btn" data-name="Sunrise City View">AI phân tích</button>
+                </div>
+              </article>
+              <article class="property">
+                <div class="property-art" style="filter:hue-rotate(65deg)"></div>
+                <div class="property-body">
+                  <h4>City Garden</h4>
+                  <p>2PN · 72m² · 4,8 tỷ · Bình Thạnh</p>
+                  <button class="btn btn-secondary analyze-btn" data-name="City Garden">AI phân tích</button>
+                </div>
+              </article>
+            </div>
+
+            <div class="woz-layout">
+              <div class="analysis-card">
+                <span class="tag">Kết quả mô phỏng</span>
+                <h3 id="property-name">Lumière Riverside</h3>
+                <div class="score-ring"><div class="score-inner">84%</div></div>
+                <div class="reason"><span>Phù hợp ngân sách</span><strong>Rất tốt</strong></div>
+                <div class="reason"><span>Khoảng cách đi làm</span><strong>22 phút</strong></div>
+                <div class="reason"><span>Tiềm năng cho thuê</span><strong>Khá</strong></div>
+              </div>
+
+              <div class="fake-ai">
+                <span class="tag">Wizard-of-Oz</span>
+                <h3>Khách tưởng là AI; team trả lời phía sau</h3>
+                <p>Chọn một câu hỏi để thử phản hồi:</p>
+                <div class="quick-prompts">
+                  <button class="chip" data-answer="Căn này nằm trong ngân sách 3,5 tỷ và đáp ứng đủ 2 phòng ngủ. Điểm trừ là phí quản lý thuộc nhóm cao.">Vì sao phù hợp?</button>
+                  <button class="chip" data-answer="Rủi ro chính: giá đang cao hơn trung vị khu vực khoảng 6% và thanh khoản phụ thuộc nhiều vào nhóm khách chuyên gia.">Rủi ro là gì?</button>
+                  <button class="chip" data-answer="Nên hỏi thêm pháp lý căn cụ thể, phí quản lý, quỹ bảo trì và lịch sử cho thuê 12 tháng gần nhất trước khi đặt cọc.">Cần hỏi môi giới gì?</button>
+                </div>
+                <div class="ai-output" id="ai-output">Chọn một câu hỏi bên trên để xem câu trả lời mô phỏng.</div>
+                <p style="margin:16px 0 8px"><strong>Câu trả lời này có đáng tin không?</strong></p>
+                <div class="rating">
+                  <button data-rating="1">1</button>
+                  <button data-rating="2">2</button>
+                  <button data-rating="3">3</button>
+                  <button data-rating="4">4</button>
+                  <button data-rating="5">5</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="metrics">
+      <div class="shell">
+        <p class="section-kicker">05 · Cách đọc kết quả</p>
+        <h2>Đừng hỏi “khách có thích không?” — hãy đo hành vi</h2>
+        <p class="lead">Dashboard tối thiểu sau một tuần thử nghiệm chỉ cần ba chỉ số dưới đây.</p>
+
+        <div class="metric-grid">
+          <div class="metric"><strong id="metric-leads">0</strong><span>Form demo đã gửi</span></div>
+          <div class="metric"><strong id="metric-shortlists">0</strong><span>Shortlist demo đã gửi</span></div>
+          <div class="metric"><strong id="metric-rating">—</strong><span>Điểm tin tưởng gần nhất</span></div>
+        </div>
+
+        <div class="decision" style="margin-top:22px">
+          <div>
+            <h3>Quy tắc quyết định</h3>
+            <p>Nếu đạt cả 3 ngưỡng A–B–C: tiếp tục xây MVP. Nếu chỉ có conversion nhưng không có ý định xem nhà: điều chỉnh lời hứa hoặc chất lượng shortlist. Nếu conversion thấp: dừng và phỏng vấn lại vấn đề.</p>
+          </div>
+          <a class="btn btn-primary" href="#hypothesis">Quay lại hypothesis</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="shell">
+    Đặng Trần Đạt · 2A202600662 · Bài làm Day 17 · Prototype không lưu dữ liệu thật
+  </footer>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    const state = { leads: 0, shortlists: 0, rating: null };
+
+    function toast(message) {
+      const el = document.getElementById("toast");
+      el.textContent = message;
+      el.classList.add("show");
+      clearTimeout(window.toastTimer);
+      window.toastTimer = setTimeout(() => el.classList.remove("show"), 2600);
+    }
+
+    function refreshMetrics() {
+      document.getElementById("metric-leads").textContent = state.leads;
+      document.getElementById("metric-shortlists").textContent = state.shortlists;
+      document.getElementById("metric-rating").textContent = state.rating ? state.rating + "/5" : "—";
+    }
+
+    document.querySelectorAll(".tab").forEach((tab) => {
+      tab.addEventListener("click", () => {
+        document.querySelectorAll(".tab, .prototype").forEach((el) => el.classList.remove("active"));
+        tab.classList.add("active");
+        document.getElementById(tab.dataset.tab).classList.add("active");
+      });
+    });
+
+    document.getElementById("lead-form").addEventListener("submit", (event) => {
+      event.preventDefault();
+      document.getElementById("lead-fields").style.display = "none";
+      document.getElementById("lead-result").classList.add("show");
+      state.leads += 1;
+      refreshMetrics();
+      toast("Smoke test: ghi nhận 1 conversion.");
+    });
+
+    document.getElementById("send-shortlist").addEventListener("click", () => {
+      document.getElementById("concierge-result").classList.add("show");
+      state.shortlists += 1;
+      refreshMetrics();
+      toast("Concierge MVP: shortlist đã được gửi.");
+    });
+
+    document.querySelectorAll(".analyze-btn").forEach((button) => {
+      button.addEventListener("click", () => {
+        document.getElementById("property-name").textContent = button.dataset.name;
+        toast("Wizard-of-Oz: đã mở phân tích cho " + button.dataset.name + ".");
+      });
+    });
+
+    document.querySelectorAll(".chip").forEach((button) => {
+      button.addEventListener("click", () => {
+        const output = document.getElementById("ai-output");
+        output.textContent = "Đang phân tích…";
+        setTimeout(() => output.textContent = button.dataset.answer, 550);
+      });
+    });
+
+    document.querySelectorAll("[data-rating]").forEach((button) => {
+      button.addEventListener("click", () => {
+        document.querySelectorAll("[data-rating]").forEach((el) => el.classList.remove("selected"));
+        button.classList.add("selected");
+        state.rating = button.dataset.rating;
+        refreshMetrics();
+        toast("Đã ghi nhận mức độ tin tưởng " + state.rating + "/5.");
+      });
+    });
+  </script>
+</body>
+</html>
